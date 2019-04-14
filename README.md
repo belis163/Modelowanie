@@ -1,0 +1,2 @@
+# Modelowanie
+Automaty komórkowe
