@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -33,9 +33,17 @@ namespace Sumulacja
                 number_of_steps = int.Parse(number_of_steps_text_box.Text);
                 rule = int.Parse(rule_combo_box.Text);
 
-                if(bc_combo_box.Text == "periodyczne")
+                if (bc_combo_box.Text == "periodyczne")
                 {
                     BC = 1;
+                }
+                else if (bc_combo_box.Text == "pochlaniajace")
+                {
+                    BC = 2;
+                }
+                else if (bc_combo_box.Text == "odbijajace")
+                {
+                    BC = 3;
                 }
 
                 String binaryRule = Convert.ToString(rule, 2);
@@ -71,8 +79,33 @@ namespace Sumulacja
                     }
                 }
 
-                calculateIteration(cellList, binRule);
-                kurwaRysujToGunwo(cellList);
+                switch (BC)
+                {
+                    case 1:
+                        {
+                            calculatePeriodical(cellList, binRule);
+                            break;
+                        }
+                    case 2:
+                        {
+                            cells[number_of_cells - 1].setCellState(true);
+                            cells[0].setCellState(true);
+                            calculateAbsorbing(cellList, binRule);
+                            break;
+                        }
+                    case 3:
+                        {
+                            cells[number_of_cells - 1].setCellState(true);
+                            cells[0].setCellState(true);
+                            calculateBouncing(cellList, binRule);
+                            break;
+                        }
+                    default:
+                        MessageBox.Show("ZobaCoJes");
+                        break;
+                }
+                
+                drawCells(cellList);
             }
 
             catch (Exception error)
@@ -80,14 +113,15 @@ namespace Sumulacja
                 MessageBox.Show(error.ToString());
             }
 
-            number_of_cells = 0;
+           /* number_of_cells = 0;
             number_of_steps = 0;
             BC = 0;
-            rule = 0;
+            rule = 0;*/
 
         }
+        
 
-        private void calculateIteration(List<Cell[]> stepsList, bool[] binRule)
+        private void calculatePeriodical(List<Cell[]> stepsList, bool[] binRule)
         {
             bool before, center, after;
 
@@ -150,11 +184,137 @@ namespace Sumulacja
             }
         }
 
-        private void kurwaRysujToGunwo(List<Cell[]> stepsList)
+        private void calculateAbsorbing(List<Cell[]> stepsList, bool[] binRule)
+        {
+            bool before, center, after;
+
+            for (int i = 1; i < number_of_steps; i++)
+            {
+                for (int j = 0; j < number_of_cells; j++)
+                {
+                    if (j == 0)
+                    {
+                        before = true;
+                        center = stepsList[i - 1][j].getCellState();
+                        after = stepsList[i - 1][j + 1].getCellState();
+                    }
+                    else if (j == number_of_cells - 1)
+                    {
+                        before = stepsList[i - 1][j - 1].getCellState();
+                        center = stepsList[i - 1][j].getCellState();
+                        after = stepsList[i - 1][0].getCellState();
+                    }
+                    else
+                    {
+                        before = stepsList[i - 1][j - 1].getCellState();
+                        center = stepsList[i - 1][j].getCellState();
+                        after = true;
+                    }
+
+                    if ((before == true) && (center == true) && (after == true))
+                    {
+                        stepsList[i][j].setCellState(binRule[0]);
+                    }
+                    else if ((before == true) && (center == true) && (after == false))
+                    {
+                        stepsList[i][j].setCellState(binRule[1]);
+                    }
+                    else if ((before == true) && (center == false) && (after == true))
+                    {
+                        stepsList[i][j].setCellState(binRule[2]);
+                    }
+                    else if ((before == true) && (center == false) && (after == false))
+                    {
+                        stepsList[i][j].setCellState(binRule[3]);
+                    }
+                    else if ((before == false) && (center == true) && (after == true))
+                    {
+                        stepsList[i][j].setCellState(binRule[4]);
+                    }
+                    else if ((before == false) && (center == true) && (after == false))
+                    {
+                        stepsList[i][j].setCellState(binRule[5]);
+                    }
+                    else if ((before == false) && (center == false) && (after == true))
+                    {
+                        stepsList[i][j].setCellState(binRule[6]);
+                    }
+                    else if ((before == false) && (center == false) && (after == false))
+                    {
+                        stepsList[i][j].setCellState(binRule[7]);
+                    }
+                }
+            }
+        }
+
+        private void calculateBouncing(List<Cell[]> stepsList, bool[] binRule)
+        {
+            bool before, center, after;
+
+            for (int i = 1; i < number_of_steps; i++)
+            {
+                for (int j = 0; j < number_of_cells; j++)
+                {
+                    if (j == 0)
+                    {
+                        before = !stepsList[i - 1][j].getCellState();
+                        center = stepsList[i - 1][j].getCellState();
+                        after = stepsList[i - 1][j + 1].getCellState();
+                    }
+                    else if (j == number_of_cells - 1)
+                    {
+                        before = stepsList[i - 1][j - 1].getCellState();
+                        center = stepsList[i - 1][j].getCellState();
+                        after = stepsList[i - 1][0].getCellState();
+                    }
+                    else
+                    {
+                        before = stepsList[i - 1][j - 1].getCellState();
+                        center = stepsList[i - 1][j].getCellState();
+                        after = !stepsList[i - 1][j].getCellState();
+                    }
+
+                    if ((before == true) && (center == true) && (after == true))
+                    {
+                        stepsList[i][j].setCellState(binRule[0]);
+                    }
+                    else if ((before == true) && (center == true) && (after == false))
+                    {
+                        stepsList[i][j].setCellState(binRule[1]);
+                    }
+                    else if ((before == true) && (center == false) && (after == true))
+                    {
+                        stepsList[i][j].setCellState(binRule[2]);
+                    }
+                    else if ((before == true) && (center == false) && (after == false))
+                    {
+                        stepsList[i][j].setCellState(binRule[3]);
+                    }
+                    else if ((before == false) && (center == true) && (after == true))
+                    {
+                        stepsList[i][j].setCellState(binRule[4]);
+                    }
+                    else if ((before == false) && (center == true) && (after == false))
+                    {
+                        stepsList[i][j].setCellState(binRule[5]);
+                    }
+                    else if ((before == false) && (center == false) && (after == true))
+                    {
+                        stepsList[i][j].setCellState(binRule[6]);
+                    }
+                    else if ((before == false) && (center == false) && (after == false))
+                    {
+                        stepsList[i][j].setCellState(binRule[7]);
+                    }
+                }
+            }
+        }
+
+        private void drawCells(List<Cell[]> stepsList)
         {
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
             graphics = Graphics.FromImage(this.pictureBox1.Image);
-            SolidBrush solidBrush = new SolidBrush(Color.Pink);
+            SolidBrush solidBrush = new SolidBrush(Color.Aqua);
 
             float PBWidtgh= (float)pictureBox1.Width / (float)number_of_cells;
             float PBHeight = (float)pictureBox1.Height / (float)number_of_steps;
@@ -168,17 +328,16 @@ namespace Sumulacja
                 {
                     if(stepsList[i][j].getCellState() == true)
                     {
-                        solidBrush.Color = Color.Yellow;
+                        solidBrush.Color = Color.Pink;
                     }
                     else
                     {
-                        solidBrush.Color = Color.Green;
+                        solidBrush.Color = Color.Aqua;
                     }
 
                     graphics.FillRectangle(solidBrush, x, y, PBWidtgh, PBHeight);
                     x = x + PBWidtgh;
                 }
-
                 x = 0;
                 y = y + PBHeight;
             }
