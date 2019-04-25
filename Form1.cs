@@ -190,6 +190,8 @@ namespace Sumulacja
 
             for (int i = 1; i < number_of_steps; i++)
             {
+                stepsList[i][0].setCellState(true);
+                stepsList[i][number_of_cells - 1].setCellState(true);
                 for (int j = 0; j < number_of_cells; j++)
                 {
                     if (j == 0)
@@ -343,8 +345,6 @@ namespace Sumulacja
             }
 
         }
-
-
     }    
 }
 
